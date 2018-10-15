@@ -62,6 +62,7 @@ public:
     virtual int SSL_BN_bn2bin(const BIGNUM* a, unsigned char* to) = 0;
     virtual ASN1_INTEGER* SSL_ASN1_INTEGER_new() = 0;
     virtual void SSL_ASN1_INTEGER_free(ASN1_INTEGER* a) = 0;
+    virtual void* SSL_OPENSSL_malloc(int num) = 0;
     virtual void SSL_OPENSSL_free(void* addr) = 0;
     virtual char* SSL_BN_bn2dec(const BIGNUM* a) = 0;
     virtual void SSL_BN_free(BIGNUM* a) = 0;
@@ -97,6 +98,7 @@ public:
     virtual int SSL_EVP_PKEY_keygen(EVP_PKEY_CTX* ctx, EVP_PKEY** ppkey) = 0;
     virtual int SSL_EVP_PKEY_keygen_init(EVP_PKEY_CTX* ctx) = 0;
 
+    virtual EVP_PKEY_CTX* SSL_EVP_PKEY_CTX_new(EVP_PKEY *pkey, ENGINE* engine) = 0;
     virtual EVP_PKEY_CTX* SSL_EVP_PKEY_CTX_new_id(int id, ENGINE* engine) = 0;
     virtual void SSL_EVP_PKEY_CTX_free(EVP_PKEY_CTX* ptr) = 0;
     virtual int SSL_EVP_PKEY_CTX_set_rsa_keygen_bits(EVP_PKEY_CTX* ctx, int mbits) = 0;
@@ -225,6 +227,23 @@ public:
     virtual STACK_OF(X509)* SSL_sk_X509_new_null() = 0;
     virtual int SSL_sk_X509_push(STACK_OF(X509)* stack, const X509 *crt) = 0;
     virtual void SSL_sk_X509_free(STACK_OF(X509)* stack) = 0;
+
+    virtual int SSL_EVP_PKEY_encrypt_init(EVP_PKEY_CTX *ctx) = 0;
+    virtual int SSL_EVP_PKEY_encrypt(EVP_PKEY_CTX *ctx,
+                                    unsigned char *out, size_t *outlen,
+                                    const unsigned char *in, size_t inlen) = 0;
+    virtual int SSL_EVP_PKEY_decrypt_init(EVP_PKEY_CTX *ctx) = 0;
+    virtual int SSL_EVP_PKEY_decrypt(EVP_PKEY_CTX *ctx,
+                                    unsigned char *out, size_t *outlen,
+                                    const unsigned char *in, size_t inlen) = 0;
+    virtual int SSL_EVP_PKEY_CTX_set_rsa_padding(EVP_PKEY_CTX *ctx, int pad) = 0;
+    virtual int SSL_EVP_PKEY_CTX_set_rsa_mgf1_md(EVP_PKEY_CTX *ctx, const EVP_MD *md) = 0;
+    virtual int SSL_EVP_PKEY_CTX_set_rsa_oaep_md(EVP_PKEY_CTX *ctx, const EVP_MD *md) = 0;
+    virtual int SSL_EVP_PKEY_CTX_set_rsa_oaep_label(EVP_PKEY_CTX *ctx, unsigned char *l,
+                                                    int llen) = 0;
+    virtual int SSL_EVP_PKEY_CTX_get_rsa_oaep_label(EVP_PKEY_CTX *ctx, unsigned char *l) = 0;
+    virtual int SSL_RSA_size(const RSA *r) = 0;
+    virtual int SSL_EVP_MD_size(const EVP_MD *md) = 0;
 };
 
 /**
@@ -264,6 +283,7 @@ public:
     MOCK_METHOD2(SSL_BN_bn2bin, int(const BIGNUM*, unsigned char*));
     MOCK_METHOD0(SSL_ASN1_INTEGER_new, ASN1_INTEGER*());
     MOCK_METHOD1(SSL_ASN1_INTEGER_free, void(ASN1_INTEGER*));
+    MOCK_METHOD1(SSL_OPENSSL_malloc, void*(int));
     MOCK_METHOD1(SSL_OPENSSL_free, void(void*));
     MOCK_METHOD1(SSL_BN_bn2dec, char*(const BIGNUM*));
     MOCK_METHOD1(SSL_BN_free, void(BIGNUM*));
@@ -301,6 +321,7 @@ public:
     MOCK_METHOD2(SSL_EVP_PKEY_keygen, int(EVP_PKEY_CTX*, EVP_PKEY**));
     MOCK_METHOD1(SSL_EVP_PKEY_keygen_init, int(EVP_PKEY_CTX* ctx));
 
+    MOCK_METHOD2(SSL_EVP_PKEY_CTX_new, EVP_PKEY_CTX*(EVP_PKEY*, ENGINE*));
     MOCK_METHOD2(SSL_EVP_PKEY_CTX_new_id, EVP_PKEY_CTX*(int, ENGINE*));
     MOCK_METHOD1(SSL_EVP_PKEY_CTX_free, void(EVP_PKEY_CTX*));
     MOCK_METHOD2(SSL_EVP_PKEY_CTX_set_rsa_keygen_bits, int(EVP_PKEY_CTX*, int));
@@ -399,6 +420,24 @@ public:
     MOCK_METHOD2(SSL_X509_NAME_get_entry, X509_NAME_ENTRY*(X509_NAME*, int));
     MOCK_METHOD1(SSL_X509_NAME_ENTRY_get_data, ASN1_STRING*(X509_NAME_ENTRY*));
     MOCK_METHOD3(SSL_ASN1_STRING_print_ex, int(BIO*, ASN1_STRING*, unsigned long));
+
+    MOCK_METHOD1(SSL_EVP_PKEY_encrypt_init, int(EVP_PKEY_CTX *ctx));
+    MOCK_METHOD5(SSL_EVP_PKEY_encrypt, int(EVP_PKEY_CTX *ctx,
+                                           unsigned char *out, size_t *outlen,
+                                           const unsigned char *in, size_t inlen));
+    MOCK_METHOD1(SSL_EVP_PKEY_decrypt_init, int(EVP_PKEY_CTX *ctx));
+    MOCK_METHOD5(SSL_EVP_PKEY_decrypt, int(EVP_PKEY_CTX *ctx,
+                                           unsigned char *out, size_t *outlen,
+                                           const unsigned char *in, size_t inlen));
+    MOCK_METHOD2(SSL_EVP_PKEY_CTX_set_rsa_padding, int(EVP_PKEY_CTX*, int));
+    MOCK_METHOD2(SSL_EVP_PKEY_CTX_set_rsa_mgf1_md, int(EVP_PKEY_CTX *ctx, const EVP_MD *md));
+    MOCK_METHOD2(SSL_EVP_PKEY_CTX_set_rsa_oaep_md, int(EVP_PKEY_CTX *ctx, const EVP_MD *md));
+    MOCK_METHOD3(SSL_EVP_PKEY_CTX_set_rsa_oaep_label, int(EVP_PKEY_CTX *ctx, unsigned char *l,
+                                                          int llen));
+    MOCK_METHOD2(SSL_EVP_PKEY_CTX_get_rsa_oaep_label, int(EVP_PKEY_CTX *ctx, unsigned char *l));
+
+    MOCK_METHOD1(SSL_RSA_size, int(const RSA *r));
+    MOCK_METHOD1(SSL_EVP_MD_size, int(const EVP_MD *md));
 };
 
 /**

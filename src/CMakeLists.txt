@@ -14,6 +14,7 @@ set(MOCOCRW_INSTALL_INCLUDEDIR
 # Before you add anything here:
 set(LIBRARY_SOURCES
     asn1time.cpp
+    asymmetric_encryption.cpp
     basic_constraints.cpp
     bio.cpp
     ca.cpp
@@ -32,6 +33,7 @@ set(LIBRARY_SOURCES
 
 set(LIBRARY_PUBLIC_HEADERS
     mococrw/asn1time.h
+    mococrw/asymmetric_encryption.h
     mococrw/basic_constraints.h
     mococrw/ca.h
     mococrw/crl.h
@@ -44,6 +46,7 @@ set(LIBRARY_PUBLIC_HEADERS
     mococrw/key_usage.h
     mococrw/openssl_lib.h
     mococrw/openssl_wrap.h
+    mococrw/padding_mode.h
     mococrw/sign_params.h
     mococrw/subject_key_identifier.h
     mococrw/util.h

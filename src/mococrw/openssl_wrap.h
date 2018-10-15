@@ -49,6 +49,22 @@ struct SSLDeleter
 };
 
 /**
+ * Template to wrap the OpenSSL_free function
+ * into a functor so that a std::unique_ptr
+ * can use them.
+ */
+template <class P>
+struct SSLFree
+{
+  void operator()(P* ptr)
+  {
+    if (ptr) {
+        lib::OpenSSLLib::SSL_OPENSSL_free(ptr);
+    }
+  }
+};
+
+/*P
  * An Exception for OpenSSL errors.
  *
  * This exception is thrown by all methods when an OpenSSL error occurs.
@@ -191,6 +207,17 @@ SSL_EVP_PKEY_Ptr _EVP_PKEY_new();
 SSL_X509_REQ_Ptr _X509_REQ_new();
 
 /**
+ * Create an EVP_PKEY_CTX instance for the given key.
+ *
+ * @throw OpenSSLException when the object could not be created.
+ *
+ * Note that the OpenSSL call has a second parameter of type ENGINE*, which is optional.
+ * The ENGINE parameter is currently unused, which is why we have not included this parameter
+ * (thankfully C++ supports overloading which is why we can always add this later).
+ */
+SSL_EVP_PKEY_CTX_Ptr _EVP_PKEY_CTX_new(EVP_PKEY *pkey);
+
+/**
  * Create an EVP_PKEY_CTX instance for the given ID. The IDs come from OpenSSLs native headers.
  *
  * @throw OpenSSLException when the object could not be created.
@@ -274,6 +301,14 @@ enum class X509Extension_NID : int {
     BasicConstraints = NID_basic_constraints,
     KeyUsage = NID_key_usage,
     SubjectKeyIdentifier = NID_subject_key_identifier
+};
+
+enum class RSAPaddingMode
+{
+    NONE = RSA_NO_PADDING,
+    PKCS1 = RSA_PKCS1_PADDING,
+    PSS = RSA_PKCS1_PSS_PADDING,
+    OAEP = RSA_PKCS1_OAEP_PADDING
 };
 
 /**
@@ -950,6 +985,72 @@ void _X509_STORE_CTX_set_time(X509_STORE_CTX* ctx, std::time_t time);
  * @throw OpenSSLException if the ASN1_TIME doesn't fit into a time_t.
  */
 time_t _asn1TimeToTimeT(const ASN1_TIME *time);
+
+/**
+ * Initializes the context for an encryption operation
+ */
+void _EVP_PKEY_encrypt_init(EVP_PKEY_CTX *ctx);
+
+/**
+ * Encrypts a message
+ */
+void _EVP_PKEY_encrypt(EVP_PKEY_CTX *ctx,
+                       unsigned char *out, size_t *outlen,
+                       const unsigned char *in, size_t inlen);
+
+/**
+ * Initializes the context for an decryption operation
+ */
+void _EVP_PKEY_decrypt_init(EVP_PKEY_CTX *ctx);
+
+/**
+ * Decrypts a message
+ */
+void _EVP_PKEY_decrypt(EVP_PKEY_CTX *ctx,
+                       unsigned char *out, size_t *outlen,
+                       const unsigned char *in, size_t inlen);
+
+/**
+ * Sets the RSA padding
+ */
+void _EVP_PKEY_CTX_set_rsa_padding(EVP_PKEY_CTX *ctx, int pad);
+
+/**
+ * Sets the mgf1
+ */
+void _EVP_PKEY_CTX_set_rsa_mgf1_md(EVP_PKEY_CTX *ctx, const EVP_MD *md);
+
+/**
+ * Sets the OAEP hashing function
+ */
+void _EVP_PKEY_CTX_set_rsa_oaep_md(EVP_PKEY_CTX *ctx, const EVP_MD *md);
+
+/**
+ * Sets the OAEP label
+ */
+void _EVP_PKEY_CTX_set_rsa_oaep_label(EVP_PKEY_CTX *ctx, unsigned char *l, int llen);
+
+/**
+ * Gets the OAEP label
+ */
+int _EVP_PKEY_CTX_get_rsa_oaep_label(EVP_PKEY_CTX *ctx, unsigned char *l);
+
+/**
+ * Returns the size of an RSA Key
+ */
+int _RSA_size(const RSA *r);
+
+/**
+ * Returns the size of a message digest
+ */
+int _EVP_MD_size(const EVP_MD *md);
+
+/**
+ * Allocates memory
+ */
+void* _OPENSSL_malloc(int num);
+
+void _CRYPTO_malloc_init();
 
 }  //::openssl
 }  //::mococrw

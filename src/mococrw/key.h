@@ -40,23 +40,9 @@ public:
     {
     }
 
-/*
- * If we support more than RSA keys at some point, this will become necessary
- * When that happens, we will also need to expose these paramters via the Spec class
- */
-#if 0
-    enum class Types : int { RSA = EVP_PKEY_RSA, };
+    enum class KeyTypes : int { RSA = EVP_PKEY_RSA, ECC = EVP_PKEY_EC };
 
-    Types getType() const  { return reinterpret_cast<Types>(EVP_PKEY_type(_key.get()->type)); }
-private:
-    //note that this unique_ptr will not compile because of the incompleteness of type Spec, but
-    //this is just to hint at what is to come
-    std::unique_ptr<Spec> _spec = nullptr;
-
-    //this we then want to call from the constructor
-    void _createSpecFromPKEY() { switch(getType()) .... }
-
-#endif
+    KeyTypes getType() const  { return static_cast<KeyTypes>(openssl::_EVP_PKEY_type(_key.get())); }
 
     inline const openssl::SSL_EVP_PKEY_SharedPtr& internal() const { return _key; }
     inline openssl::SSL_EVP_PKEY_SharedPtr& internal() { return _key; }
@@ -103,7 +89,7 @@ protected:
  *
  * NOTE: This class is the equivalent of a private key,
  * because private keys always hold the corresponding
- * pulbic keys, whereas public keys really only contain
+ * public keys, whereas public keys really only contain
  * the public key.
  */
 class AsymmetricKeypair : public AsymmetricPublicKey
@@ -135,6 +121,7 @@ public:
      * Generate an asymmetric keypair with given Spec.
      *
      * @see RSASpec
+     * @see ECCSpec
      *
      * @throws This method may throw an OpenSSLException if OpenSSL
      *      indicates an error
@@ -197,4 +184,17 @@ public:
 private:
     unsigned int _numBits;
 };
+
+class ECCSpec final : public AsymmetricKey::Spec
+{
+public:
+    static constexpr openssl::ellipticCurveNid defaultCurveNid = openssl::ellipticCurveNid::PRIME_256v1;
+    explicit ECCSpec(openssl::ellipticCurveNid curveNid) : _curveNid{curveNid} {}
+    ECCSpec() : ECCSpec{defaultCurveNid} {}
+    inline openssl::ellipticCurveNid curve() const { return _curveNid; }
+    AsymmetricKey generate() const override;
+private:
+    openssl::ellipticCurveNid _curveNid;
+};
+
 }

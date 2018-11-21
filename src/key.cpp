@@ -22,6 +22,7 @@
 
 #include "mococrw/bio.h"
 #include "mococrw/key.h"
+#include "mococrw/error.h"
 
 #include "mococrw/openssl_wrap.h"
 
@@ -31,7 +32,12 @@ using namespace openssl;
 AsymmetricKeypair AsymmetricKeypair::generate()
 {
     RSASpec defaultSpec{};
-    return AsymmetricKeypair{defaultSpec.generate()};
+    return generate(defaultSpec);
+}
+
+AsymmetricKeypair AsymmetricKeypair::generate(const AsymmetricKey::Spec &keySpec)
+{
+    return AsymmetricKeypair{keySpec.generate()};
 }
 
 std::string AsymmetricPublicKey::publicKeyToPem() const
@@ -83,5 +89,26 @@ AsymmetricKey RSASpec::generate() const
 
     auto pkey = _EVP_PKEY_keygen(keyCtx.get());
     return AsymmetricKey{std::move(pkey)};
+}
+
+AsymmetricKey ECCSpec::generate() const {
+   SSL_EVP_PKEY_Ptr pkey{nullptr};
+   try {
+        /*Setting the correct curve to generate the ECC key*/
+        auto paramCtx = _EVP_PKEY_CTX_new_id(EVP_PKEY_EC);
+        _EVP_PKEY_paramgen_init(paramCtx.get());
+        _EVP_PKEY_CTX_set_ec_paramgen_curve_nid(paramCtx.get(),
+               static_cast<typename std::underlying_type<openssl::ellipticCurveNid>::type>(_curveNid));
+        auto params = _EVP_PKEY_paramgen(paramCtx.get());
+
+        /*Key Generation*/
+        auto keyCtx = _EVP_PKEY_CTX_new(params.get());
+        _EVP_PKEY_keygen_init(keyCtx.get());
+        pkey = _EVP_PKEY_keygen(keyCtx.get());
+
+   } catch (const OpenSSLException &e) {
+        throw MoCOCrWException(e.what());
+   }
+   return AsymmetricKey{std::move(pkey)};
 }
 }

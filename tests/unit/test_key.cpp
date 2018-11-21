@@ -89,16 +89,42 @@ TEST_F(KeyHandlingTests, testThrowsWhenReadingPrivateKeyUsingWrongKey)
                  mococrw::OpenSSLException);
 }
 
+TEST_F(KeyHandlingTests, ecc_adoc_test)
+{
+    ECCSpec spec{};
+    auto key = AsymmetricKeypair::generate(spec);
+    std::cout << key.privateKeyToPem("alice") << std::endl;
+    std::cout << "-------------------------------------------------------" << std::endl;
+    std::cout << key.publicKeyToPem() << std::endl;
+
+    auto key2 = AsymmetricKeypair::generate(spec);
+    std::cout << key2.privateKeyToPem("pass") << std::endl;
+    std::cout << "-------------------------------------------------------" << std::endl;
+    std::cout << key2.publicKeyToPem() << std::endl;
+
+//    auto retrievedKey = AsymmetricKeypair::readPrivateKeyFromPEM(key.privateKeyToPem(pass), pass);
+//    std::cout << "-------------------------------------------------------" << std::endl;
+//    std::cout << retrievedKey.privateKeyToPem("password") << std::endl;
+//    std::cout << "-------------------------------------------------------" << std::endl;
+//    std::cout << retrievedKey.publicKeyToPem() << std::endl;
+//    if (retrievedKey == key)
+//        ASSERT_EQ(true, true);
+//    else
+//        ASSERT_EQ(true, false);
+
+}
+
+
 
 /* Test the KeySpec and the generation of keys that way */
 
-TEST(KeySpecTest, testGeneratingRSAKeyWithDefaultParameters)
-{
-    RSASpec spec{};
-
-    auto keypair = spec.generate();
-    ASSERT_THAT(keypair.internal(), NotNull());
-}
+//TEST(KeySpecTest, testGeneratingRSAKeyWithDefaultParameters)
+//{
+//    RSASpec spec{};
+//
+//    auto keypair = spec.generate();
+//    ASSERT_THAT(keypair.internal(), NotNull());
+//}
 
 TEST(KeySpecTest, testThatDefaultParametersAreSane)
 {

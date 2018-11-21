@@ -33,6 +33,7 @@ extern "C" {
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
+#include <openssl/ec.h>
 }
 
 namespace mococrw
@@ -121,6 +122,10 @@ public:
     static void SSL_EVP_PKEY_CTX_free(EVP_PKEY_CTX* ptr) noexcept;
     static int SSL_EVP_PKEY_CTX_set_rsa_keygen_bits(EVP_PKEY_CTX* ctx, int mbits) noexcept;
     static int SSL_EVP_PKEY_cmp(const EVP_PKEY *a, const EVP_PKEY *b) noexcept;
+    static int SSL_EVP_PKEY_paramgen_init(EVP_PKEY_CTX *ctx) noexcept;
+    static int SSL_EVP_PKEY_paramgen(EVP_PKEY_CTX *ctx, EVP_PKEY **ppkey) noexcept;
+    static int SSL_EVP_PKEY_CTX_set_ec_paramgen_curve_nid(EVP_PKEY_CTX *ctx, int nid) noexcept;
+    static int SSL_EVP_PKEY_type(int type) noexcept;
 
     /* Reference counting magic */
     static int SSL_CRYPTO_add(int *pointer, int amount, int type) noexcept;

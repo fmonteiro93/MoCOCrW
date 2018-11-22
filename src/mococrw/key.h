@@ -40,6 +40,9 @@ public:
     {
     }
 
+    /**
+     * Supported asymmetric key types.
+     */
     enum class KeyTypes : int { RSA = EVP_PKEY_RSA, ECC = EVP_PKEY_EC };
 
     KeyTypes getType() const  { return static_cast<KeyTypes>(openssl::_EVP_PKEY_type(_key.get())); }
@@ -63,11 +66,34 @@ public:
     {
     }
 
+    /**
+     * Converts the asymmetric public key to the PKCS8 format that can be written in a PEM file.
+     * @return public keu in PKCS format
+     * @throws This method may throw an OpenSSLException if OpenSSL indicates an error
+     */
     std::string publicKeyToPem() const;
+    /**
+     * Reads an asymmetric public key from a PEM string and creates an @ref AsymmetricPublicKey
+     * object. Can be considered a factory method for the class.
+     * @param pem string to be read.
+     * @return the AsymmetricPublicKey object created form the PEM string
+     * @throws This method may throw an OpenSSLException if OpenSSL indicates an error
+     */
     static AsymmetricPublicKey readPublicKeyFromPEM(const std::string& pem);
 
+    /**
+     * Getters for the internal openSSL object.
+     */
     inline EVP_PKEY* internal() { return _key.internal().get(); }
     inline const EVP_PKEY* internal() const { return _key.internal().get(); }
+
+    /**
+     * Gets the type of the asymmetric key or key pair, @see AsymmetricKey::KeyTypes for the
+     * supported types.
+     * @return the type of the asymmetric key.
+     * @throws This method may throw an OpenSSLException if OpenSSL indicates an error
+     */
+    AsymmetricKey::KeyTypes getType() const  { return _key.getType(); }
 
     inline bool operator==(const AsymmetricPublicKey &rhs) const
     {

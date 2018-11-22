@@ -133,7 +133,7 @@ public:
     }
 
     /**
-     * Generate an asymmetric keypair with default Spec.
+     * Generate a RSA asymmetric keypair with default Spec.
      *
      * Currently, a default-spec is an RSASpec with 2048
      * bit modulus. (@see RSASpec)
@@ -153,6 +153,17 @@ public:
      *      indicates an error
      */
     static AsymmetricKeypair generate(const AsymmetricKey::Spec&);
+
+    /**
+     * Generate an ECC asymmetric keypair with default Spec.
+     *
+     * Currently, a default-spec is an ECCspec with a PRIME_256v1 curve
+     * (aka NIST P-256 or secp256r1).
+     *
+     * @throws This method may throw an OpenSSLException if OpenSSL
+     *      indicates an error
+     */
+    static AsymmetricKeypair generateECC();
 
     /**
      * Serialize the asymmetric keypair encrypted with the given password.
@@ -193,15 +204,20 @@ public:
      *
      * Implementations should override this method
      * to encapsulate the specifics of how to generate
-     * the various types of keys (RSA, DSA, DH).
+     * the various types of keys (RSA and ECC).
      *
      */
     virtual AsymmetricKey generate() const = 0;
 };
-
+/**
+ * RSA specification used to hold the necessary parameters to generate a RSA key pair.
+ */
 class RSASpec final : public AsymmetricKey::Spec
 {
 public:
+    /**
+     * Default RSA key size in case none is specified by the used
+     */
     static constexpr unsigned int defaultSize = 2048;
     explicit RSASpec(unsigned int numBits) : _numBits{numBits} {}
     RSASpec() : RSASpec{defaultSize} {}
@@ -211,9 +227,15 @@ private:
     unsigned int _numBits;
 };
 
+/**
+ * ECC specification used to hold the necessary parameters to generate a ECC key pair.
+ */
 class ECCSpec final : public AsymmetricKey::Spec
 {
 public:
+    /**
+     * Default elliptic curve to be used in case none is specified by the user.
+     */
     static constexpr openssl::ellipticCurveNid defaultCurveNid = openssl::ellipticCurveNid::PRIME_256v1;
     explicit ECCSpec(openssl::ellipticCurveNid curveNid) : _curveNid{curveNid} {}
     ECCSpec() : ECCSpec{defaultCurveNid} {}

@@ -114,17 +114,15 @@ TEST_F(KeyHandlingTests, ecc_adoc_test)
 
 }
 
-
-
 /* Test the KeySpec and the generation of keys that way */
 
-//TEST(KeySpecTest, testGeneratingRSAKeyWithDefaultParameters)
-//{
-//    RSASpec spec{};
-//
-//    auto keypair = spec.generate();
-//    ASSERT_THAT(keypair.internal(), NotNull());
-//}
+TEST(KeySpecTest, testGeneratingRSAKeyWithDefaultParameters)
+{
+    RSASpec spec{};
+
+    auto keypair = spec.generate();
+    ASSERT_THAT(keypair.internal(), NotNull());
+}
 
 TEST(KeySpecTest, testThatDefaultParametersAreSane)
 {

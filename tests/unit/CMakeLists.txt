@@ -16,14 +16,13 @@ if(BUILD_TESTING) #set by Ctest. Also set in the integration build environment.
         endif()
     endif()
 
-    #TODO: clean this up
     set(LIB_SOURCES "${SRC_DIR}/openssl_wrap.cpp" "${SRC_DIR}/bio.cpp" "${SRC_DIR}/distinguished_name.cpp")
     set(MOCK_SOURCES "openssl_lib_mock.cpp" ${LIB_SOURCES})
     set(REAL_SOURCES "${SRC_DIR}/openssl_lib.cpp" ${LIB_SOURCES})
 
     find_package(Threads)
 
-    #add_executable(openssltest test_opensslwrapper.cpp ${MOCK_SOURCES})
+    add_executable(openssltest test_opensslwrapper.cpp ${MOCK_SOURCES})
 
     add_executable(asn1timetests test_asn1time.cpp ${REAL_SOURCES})
     add_executable(keytests test_key.cpp ${REAL_SOURCES})
@@ -95,7 +94,7 @@ if(BUILD_TESTING) #set by Ctest. Also set in the integration build environment.
                             "${SRC_DIR}/util.cpp"
                             ${REAL_SOURCES})
 
-    #target_link_libraries(openssltest ${GMOCK_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(openssltest ${GMOCK_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
     target_link_libraries(asn1timetests ${GMOCK_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OPENSSL_LIBRARIES})
     target_link_libraries(keytests ${GMOCK_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OPENSSL_LIBRARIES})
@@ -112,7 +111,7 @@ if(BUILD_TESTING) #set by Ctest. Also set in the integration build environment.
     target_link_libraries(asymencryptiontests ${GMOCK_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OPENSSL_LIBRARIES})
     target_link_libraries(cryptodatatests ${GMOCK_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OPENSSL_LIBRARIES})
 
-    #add_test(OpenSSLTest openssltest)
+    add_test(OpenSSLTest openssltest)
 
     add_test(Asn1TimeTests asn1timetests)
     add_test(HashTests hashtests)

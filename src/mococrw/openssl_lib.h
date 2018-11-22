@@ -125,6 +125,7 @@ public:
     static int SSL_EVP_PKEY_paramgen_init(EVP_PKEY_CTX *ctx) noexcept;
     static int SSL_EVP_PKEY_paramgen(EVP_PKEY_CTX *ctx, EVP_PKEY **ppkey) noexcept;
     static int SSL_EVP_PKEY_CTX_set_ec_paramgen_curve_nid(EVP_PKEY_CTX *ctx, int nid) noexcept;
+    static int SSL_EVP_PKEY_CTX_set_ec_param_enc(EVP_PKEY_CTX *ctx, int param_enc) noexcept;
     static int SSL_EVP_PKEY_type(int type) noexcept;
 
     /* Reference counting magic */

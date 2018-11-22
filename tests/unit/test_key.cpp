@@ -30,95 +30,125 @@ class KeyHandlingTests : public ::testing::Test
 public:
     void SetUp() override;
 protected:
-    mococrw::AsymmetricKeypair _keyPair = AsymmetricKeypair::generate();
-    mococrw::AsymmetricKeypair _keyPair2 = AsymmetricKeypair::generate();
+    mococrw::AsymmetricKeypair _rsaKeyPair = AsymmetricKeypair::generate();
+    mococrw::AsymmetricKeypair _rsaKeyPair2 = AsymmetricKeypair::generate();
+    mococrw::AsymmetricKeypair _eccKeyPair = AsymmetricKeypair::generateECC();
+    mococrw::AsymmetricKeypair _eccKeyPair2 = AsymmetricKeypair::generateECC();
 };
 
 void KeyHandlingTests::SetUp() {
-    _keyPair = AsymmetricKeypair::generate();
-    _keyPair2 = AsymmetricKeypair::generate();
+    _rsaKeyPair = AsymmetricKeypair::generate();
+    _rsaKeyPair2 = AsymmetricKeypair::generate();
 }
 
 TEST_F(KeyHandlingTests, testGeneratedKeyIsNotNull)
 {
-    ASSERT_THAT(_keyPair.internal(), NotNull());
+    ASSERT_THAT(_rsaKeyPair.internal(), NotNull());
+    ASSERT_THAT(_rsaKeyPair2.internal(), NotNull());
+
+    ASSERT_THAT(_eccKeyPair.internal(), NotNull());
+    ASSERT_THAT(_eccKeyPair2.internal(), NotNull());
+
 }
 
 TEST_F(KeyHandlingTests, testPublicKeyPemIsReproducible)
 {
-    const auto pemOfKey = _keyPair.publicKeyToPem();
-    const auto pemOfKey2 = _keyPair.publicKeyToPem();
+    const auto pemOfKey = _rsaKeyPair.publicKeyToPem();
+    const auto pemOfKey2 = _rsaKeyPair.publicKeyToPem();
+
+    const auto pemOfEccKey = _eccKeyPair.publicKeyToPem();
+    const auto pemOfEccKey2 = _eccKeyPair.publicKeyToPem();
 
     ASSERT_EQ(pemOfKey, pemOfKey2);
+    ASSERT_EQ(pemOfEccKey, pemOfEccKey2);
+
 }
 
 TEST_F(KeyHandlingTests, testPubKeyFromSavedPemIsSameAsOriginalInOpenSSLObject)
 {
-    const auto pemOfPubkey = _keyPair.publicKeyToPem();
+    const auto pemOfPubkey = _rsaKeyPair.publicKeyToPem();
 
-    auto parsedKey = mococrw::AsymmetricPublicKey::readPublicKeyFromPEM(pemOfPubkey);
-    ASSERT_EQ(_keyPair, parsedKey);
+    const auto pemOfEccPubkey = _eccKeyPair.publicKeyToPem();
+
+    auto rsaParsedKey = mococrw::AsymmetricPublicKey::readPublicKeyFromPEM(pemOfPubkey);
+    auto eccParsedKey = mococrw::AsymmetricPublicKey::readPublicKeyFromPEM(pemOfEccPubkey);
+
+    EXPECT_EQ(openssl::_EVP_PKEY_cmp(_eccKeyPair.internal(), eccParsedKey.internal()), true);
+
+
+    ASSERT_EQ(_rsaKeyPair, rsaParsedKey);
+
+    ASSERT_EQ(_eccKeyPair, eccParsedKey);
+
 }
 
 TEST_F(KeyHandlingTests, testPubkeyFromSavedPemIsSameAsOriginalInPEM)
 {
-    const auto pemOfKey = _keyPair.publicKeyToPem();
+    const auto pemOfKey = _rsaKeyPair.publicKeyToPem();
+    const auto pemOfEccKey = _eccKeyPair.publicKeyToPem();
 
-    auto parsedKey = mococrw::AsymmetricPublicKey::readPublicKeyFromPEM(pemOfKey);
-    ASSERT_EQ(pemOfKey, parsedKey.publicKeyToPem());
+
+    auto parsedRsaKey = mococrw::AsymmetricPublicKey::readPublicKeyFromPEM(pemOfKey);
+    auto parsedEccKey = mococrw::AsymmetricPublicKey::readPublicKeyFromPEM(pemOfEccKey);
+
+    ASSERT_EQ(pemOfKey, parsedRsaKey.publicKeyToPem());
+    ASSERT_EQ(pemOfEccKey, parsedEccKey.publicKeyToPem());
+
 }
 
 TEST_F(KeyHandlingTests, testPrivKeyFromSavedPemIsSameAsOriginal)
 {
-    const auto pemOfPubKey = _keyPair.publicKeyToPem();
-    const auto pemOfPrivateKey = _keyPair.privateKeyToPem("secret");
+    const auto pemOfPubKey = _rsaKeyPair.publicKeyToPem();
+    const auto pemOfPrivateKey = _rsaKeyPair.privateKeyToPem("secret");
 
     auto retrievedKeyPair = AsymmetricKeypair::readPrivateKeyFromPEM(pemOfPrivateKey, "secret");
     ASSERT_EQ(pemOfPubKey, retrievedKeyPair.publicKeyToPem());
+
+    const auto pemOfEccPubKey = _eccKeyPair.publicKeyToPem();
+    const auto pemOfEccPrivateKey = _eccKeyPair.privateKeyToPem("password");
+
+    auto retrievedEccKeyPair = AsymmetricKeypair::readPrivateKeyFromPEM(pemOfEccPrivateKey, "password");
+    ASSERT_EQ(pemOfEccPubKey, retrievedEccKeyPair.publicKeyToPem());
+
 }
 
 TEST_F(KeyHandlingTests, testBothGeneratedKeysNotTheSame)
 {
-    ASSERT_NE(_keyPair, _keyPair2);
+    ASSERT_NE(_rsaKeyPair, _rsaKeyPair2);
+
+    ASSERT_NE(_eccKeyPair, _eccKeyPair2);
 }
 
 TEST_F(KeyHandlingTests, testThrowsWhenReadingPrivateKeyUsingWrongKey)
 {
-    const auto pemOfPrivateKey = _keyPair.privateKeyToPem("secret");
+    const auto pemOfPrivateKey = _rsaKeyPair.privateKeyToPem("secret");
     ASSERT_THROW(AsymmetricKeypair::readPrivateKeyFromPEM(pemOfPrivateKey, "wrongkey"),
+                 mococrw::OpenSSLException);
+
+    const auto pemOfEccPrivateKey = _eccKeyPair.privateKeyToPem("secret");
+    ASSERT_THROW(AsymmetricKeypair::readPrivateKeyFromPEM(pemOfEccPrivateKey, "wrongkey"),
                  mococrw::OpenSSLException);
 }
 
-TEST_F(KeyHandlingTests, ecc_adoc_test)
+TEST_F(KeyHandlingTests, testKeyTypeChecking)
 {
-    ECCSpec spec{};
-    auto key = AsymmetricKeypair::generate(spec);
-    std::cout << key.privateKeyToPem("alice") << std::endl;
-    std::cout << "-------------------------------------------------------" << std::endl;
-    std::cout << key.publicKeyToPem() << std::endl;
-
-    auto key2 = AsymmetricKeypair::generate(spec);
-    std::cout << key2.privateKeyToPem("pass") << std::endl;
-    std::cout << "-------------------------------------------------------" << std::endl;
-    std::cout << key2.publicKeyToPem() << std::endl;
-
-//    auto retrievedKey = AsymmetricKeypair::readPrivateKeyFromPEM(key.privateKeyToPem(pass), pass);
-//    std::cout << "-------------------------------------------------------" << std::endl;
-//    std::cout << retrievedKey.privateKeyToPem("password") << std::endl;
-//    std::cout << "-------------------------------------------------------" << std::endl;
-//    std::cout << retrievedKey.publicKeyToPem() << std::endl;
-//    if (retrievedKey == key)
-//        ASSERT_EQ(true, true);
-//    else
-//        ASSERT_EQ(true, false);
-
+    EXPECT_EQ(_eccKeyPair.getType(), AsymmetricKey::KeyTypes::ECC);
+    EXPECT_EQ(_rsaKeyPair.getType(), AsymmetricKey::KeyTypes::RSA);
 }
 
 /* Test the KeySpec and the generation of keys that way */
-
 TEST(KeySpecTest, testGeneratingRSAKeyWithDefaultParameters)
 {
     RSASpec spec{};
+
+    auto keypair = spec.generate();
+    ASSERT_THAT(keypair.internal(), NotNull());
+}
+
+/* Test the KeySpec and the generation of keys that way */
+TEST(KeySpecTest, testGeneratingEccKeyWithDefaultParameters)
+{
+    ECCSpec spec{};
 
     auto keypair = spec.generate();
     ASSERT_THAT(keypair.internal(), NotNull());
@@ -131,5 +161,11 @@ TEST(KeySpecTest, testThatDefaultParametersAreSane)
 
     RSASpec nonDefault{1024};
     ASSERT_THAT(nonDefault.numberOfBits(), Eq(1024));
+
+    ECCSpec defaultEccSpec{};
+    ASSERT_EQ(defaultEccSpec.curve(), openssl::ellipticCurveNid::PRIME_256v1);
+
+    ECCSpec nonDefaultEccSpec{openssl::ellipticCurveNid::SECT_283k1};
+    ASSERT_EQ(nonDefaultEccSpec.curve(), openssl::ellipticCurveNid::SECT_283k1);
 }
 

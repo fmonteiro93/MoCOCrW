@@ -227,6 +227,12 @@ void _EVP_PKEY_CTX_set_ec_paramgen_curve_nid(EVP_PKEY_CTX *ctx, int nid)
                                           ctx, nid);
 }
 
+void _EVP_PKEY_CTX_set_ec_param_enc(EVP_PKEY_CTX *ctx, int param_enc)
+{
+    OpensslCallIsNonNegative::callChecked(lib::OpenSSLLib::SSL_EVP_PKEY_CTX_set_ec_param_enc,
+                                          ctx, param_enc);
+}
+
 int _EVP_PKEY_type(const EVP_PKEY* key)
 {
     return OpensslCallIsPositive::callChecked(lib::OpenSSLLib::SSL_EVP_PKEY_type, key->type);

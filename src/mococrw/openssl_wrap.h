@@ -272,11 +272,21 @@ SSL_EVP_PKEY_Ptr _EVP_PKEY_paramgen(EVP_PKEY_CTX *ctx);
  /**
   * Set the the elliptic curve used to generate the key pair
   *
-  * @param ctx [out] pkey context created to generate the the key.
+  * @param ctx [in, out] pkey context created to generate the the key.
   * @param nid [in] Identifier of the curve to be used.
   * @throw OpenSSLException if an error occurs in the underlying OpenSSL function.
   */
 void _EVP_PKEY_CTX_set_ec_paramgen_curve_nid(EVP_PKEY_CTX *ctx, int nid);
+
+ /**
+  * Sets the the elliptic curve parameter encoding when generating
+  * EC parameters or an EC key
+  *
+  * @param ctx [in, out] pkey EC parameter or key context
+  * @param param_enc [in] Type of parameter encoding to be used
+  * @throw OpenSSLException if an error occurs in the underlying OpenSSL function.
+  */
+void _EVP_PKEY_CTX_set_ec_param_enc(EVP_PKEY_CTX *ctx, int param_enc);
 
 /**
  * Gets the type of a give PKey oject.

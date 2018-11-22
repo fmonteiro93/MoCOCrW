@@ -105,6 +105,8 @@ AsymmetricKey ECCSpec::generate() const {
         _EVP_PKEY_paramgen_init(paramCtx.get());
         _EVP_PKEY_CTX_set_ec_paramgen_curve_nid(paramCtx.get(),
                static_cast<typename std::underlying_type<openssl::ellipticCurveNid>::type>(_curveNid));
+        /*Set the curve ans1 flag so that we can save the key to a PEM format and reuse it later*/
+        _EVP_PKEY_CTX_set_ec_param_enc(paramCtx.get(), OPENSSL_EC_NAMED_CURVE);
         auto params = _EVP_PKEY_paramgen(paramCtx.get());
 
         /*Key Generation*/

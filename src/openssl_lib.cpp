@@ -122,6 +122,11 @@ int OpenSSLLib::SSL_EVP_PKEY_CTX_set_ec_paramgen_curve_nid(EVP_PKEY_CTX *ctx, in
     return EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, nid);
 }
 
+int OpenSSLLib::SSL_EVP_PKEY_CTX_set_ec_param_enc(EVP_PKEY_CTX *ctx, int param_enc) noexcept
+{
+    return EVP_PKEY_CTX_set_ec_param_enc(ctx, param_enc);
+}
+
 int OpenSSLLib::SSL_EVP_PKEY_type(int type) noexcept
 {
     return EVP_PKEY_type(type);

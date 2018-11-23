@@ -119,4 +119,13 @@ AsymmetricKey ECCSpec::generate() const {
    }
    return AsymmetricKey{std::move(pkey)};
 }
+
+openssl::ellipticCurveNid  AsymmetricKey::getCurve() const
+{
+    if(getType() != KeyTypes::ECC){
+        throw MoCOCrWException("Functionality only supported for ECC keys");
+    }
+    const EC_GROUP *group = _EC_KEY_get0_group(_key->pkey.ec);
+    return static_cast<openssl::ellipticCurveNid>(_EC_GROUP_get_curve_name(group));
+}
 }

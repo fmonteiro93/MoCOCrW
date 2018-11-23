@@ -46,7 +46,7 @@ public:
     enum class KeyTypes : int { RSA = EVP_PKEY_RSA, ECC = EVP_PKEY_EC };
 
     KeyTypes getType() const  { return static_cast<KeyTypes>(openssl::_EVP_PKEY_type(_key.get())); }
-
+    openssl::ellipticCurveNid getCurve() const;
     inline const openssl::SSL_EVP_PKEY_SharedPtr& internal() const { return _key; }
     inline openssl::SSL_EVP_PKEY_SharedPtr& internal() { return _key; }
 private:
@@ -94,6 +94,14 @@ public:
      * @throws This method may throw an OpenSSLException if OpenSSL indicates an error
      */
     AsymmetricKey::KeyTypes getType() const  { return _key.getType(); }
+
+    /**
+     * Gets the NID of the curve that was used to generate the EC key.
+     *
+     * @return the NID of the elliptic curve used to generate the key
+     * @throws This method may throw an OpenSSLException if OpenSSL indicates an error
+     */
+    openssl::ellipticCurveNid getCurve() const  { return _key.getCurve(); }
 
     inline bool operator==(const AsymmetricPublicKey &rhs) const
     {

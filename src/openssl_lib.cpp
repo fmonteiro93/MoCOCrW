@@ -127,6 +127,16 @@ int OpenSSLLib::SSL_EVP_PKEY_CTX_set_ec_param_enc(EVP_PKEY_CTX *ctx, int param_e
     return EVP_PKEY_CTX_set_ec_param_enc(ctx, param_enc);
 }
 
+const EC_GROUP* OpenSSLLib::SSL_EC_KEY_get0_group(const EC_KEY *key) noexcept
+{
+    return EC_KEY_get0_group(key);
+}
+
+int OpenSSLLib::SSL_EC_GROUP_get_curve_name(const EC_GROUP *group) noexcept
+{
+    return EC_GROUP_get_curve_name(group);
+}
+
 int OpenSSLLib::SSL_EVP_PKEY_type(int type) noexcept
 {
     return EVP_PKEY_type(type);

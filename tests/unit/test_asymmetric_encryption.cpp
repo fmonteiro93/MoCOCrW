@@ -491,6 +491,7 @@ INSTANTIATE_TEST_CASE_P(testSuccessfulEncryption, AsymmetricEncryptionTest,
  *
  * The following use cases are covered:
  * - unsupported padding (PSS)
+ * - ECC Key
  */
 TEST_F(AsymmetricEncryptionTest, testEncryptionInvalidParameters)
 {
@@ -504,6 +505,12 @@ TEST_F(AsymmetricEncryptionTest, testEncryptionInvalidParameters)
                                                unsupportedPaddingMode,
                                                nominalDataSet[0]._message),
                  MoCOCrWException);
+
+    auto eccKey = AsymmetricKeypair::generateECC();
+    EXPECT_THROW(AsymmetricEncryption::encrypt(eccKey,
+                                               OAEPPadding{},
+                                               nominalDataSet[0]._message),
+                 MoCOCrWException);
 }
 
 /**
@@ -511,6 +518,7 @@ TEST_F(AsymmetricEncryptionTest, testEncryptionInvalidParameters)
  *
  * The following use cases are covered:
  * - unsupported padding (PSS)
+ * - ECC key
  */
 TEST_F(AsymmetricEncryptionTest, testDecryptionInvalidParameters)
 {
@@ -524,6 +532,12 @@ TEST_F(AsymmetricEncryptionTest, testDecryptionInvalidParameters)
 
     EXPECT_THROW(AsymmetricEncryption::decrypt(privateKey,
                                                unsupportedPaddingMode,
+                                               nominalDataSet[0]._encrypted),
+                 MoCOCrWException);
+
+    auto eccKey = AsymmetricKeypair::generateECC();
+    EXPECT_THROW(AsymmetricEncryption::decrypt(eccKey,
+                                               OAEPPadding{},
                                                nominalDataSet[0]._encrypted),
                  MoCOCrWException);
 }

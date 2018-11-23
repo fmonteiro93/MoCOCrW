@@ -126,6 +126,8 @@ public:
     static int SSL_EVP_PKEY_paramgen(EVP_PKEY_CTX *ctx, EVP_PKEY **ppkey) noexcept;
     static int SSL_EVP_PKEY_CTX_set_ec_paramgen_curve_nid(EVP_PKEY_CTX *ctx, int nid) noexcept;
     static int SSL_EVP_PKEY_CTX_set_ec_param_enc(EVP_PKEY_CTX *ctx, int param_enc) noexcept;
+    static const EC_GROUP *SSL_EC_KEY_get0_group(const EC_KEY *key) noexcept;
+    static int SSL_EC_GROUP_get_curve_name(const EC_GROUP *group) noexcept;
     static int SSL_EVP_PKEY_type(int type) noexcept;
 
     /* Reference counting magic */

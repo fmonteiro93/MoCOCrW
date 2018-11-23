@@ -177,6 +177,16 @@ int OpenSSLLib::SSL_EVP_PKEY_CTX_set_ec_param_enc(EVP_PKEY_CTX *ctx, int param_e
     return OpenSSLLibMockManager::getMockInterface().SSL_EVP_PKEY_CTX_set_ec_param_enc(ctx, param_enc);
 }
 
+const EC_GROUP* OpenSSLLib::SSL_EC_KEY_get0_group(const EC_KEY *key) noexcept
+{
+    return OpenSSLLibMockManager::getMockInterface().SSL_EC_KEY_get0_group(key);
+}
+
+int OpenSSLLib::SSL_EC_GROUP_get_curve_name(const EC_GROUP *group) noexcept
+{
+    return OpenSSLLibMockManager::getMockInterface().SSL_EC_GROUP_get_curve_name(group);
+}
+
 int OpenSSLLib::SSL_EVP_PKEY_type(int type) noexcept
 {
     return OpenSSLLibMockManager::getMockInterface().SSL_EVP_PKEY_type(type);

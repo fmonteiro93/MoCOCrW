@@ -21,6 +21,7 @@
 #include <openssl/evp.h>
 #include "key.h"
 #include "openssl_wrap.h"
+#include "error.h"
 
 namespace mococrw {
 /**
@@ -79,6 +80,9 @@ public:
     */
     int getDataMaxSize(const AsymmetricPublicKey& key) const override
     {
+        if(key.getType() != AsymmetricKey::KeyTypes::RSA){
+            throw  MoCOCrWException("Functionality only supported for RSA keys");
+        }
         return openssl::_RSA_size(key.internal()->pkey.rsa);
     }
 };
@@ -131,6 +135,9 @@ public:
      */
     int getDataMaxSize(const AsymmetricPublicKey& key) const override
     {
+        if(key.getType() != AsymmetricKey::KeyTypes::RSA){
+            throw  MoCOCrWException("Functionality only supported for RSA keys");
+        }
         return openssl::_RSA_size(key.internal()->pkey.rsa) - c_pkcsMaxSizeSOverhead;
     }
 
@@ -335,6 +342,9 @@ public:
      */
     int getDataMaxSize(const AsymmetricPublicKey& key) const override
     {
+        if(key.getType() != AsymmetricKey::KeyTypes::RSA){
+            throw  MoCOCrWException("Functionality only supported for RSA keys");
+        }
         return openssl::_RSA_size(key.internal()->pkey.rsa) -
                 (2 * openssl::_EVP_MD_size(_getMDPtrFromDigestType(_hashingFunction)) - 2);
     }

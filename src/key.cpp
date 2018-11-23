@@ -122,10 +122,16 @@ AsymmetricKey ECCSpec::generate() const {
 
 openssl::ellipticCurveNid  AsymmetricKey::getCurve() const
 {
+    openssl::ellipticCurveNid keyNid;
     if(getType() != KeyTypes::ECC){
         throw MoCOCrWException("Functionality only supported for ECC keys");
     }
-    const EC_GROUP *group = _EC_KEY_get0_group(_key->pkey.ec);
-    return static_cast<openssl::ellipticCurveNid>(_EC_GROUP_get_curve_name(group));
+    try{
+        const EC_GROUP *group = _EC_KEY_get0_group(_key->pkey.ec);
+        keyNid =  static_cast<openssl::ellipticCurveNid>(_EC_GROUP_get_curve_name(group));
+    } catch (const OpenSSLException &e) {
+        throw MoCOCrWException(e.what());
+    }
+    return keyNid;
 }
 }

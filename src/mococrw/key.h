@@ -68,7 +68,7 @@ public:
 
     /**
      * Converts the asymmetric public key to the PKCS8 format that can be written in a PEM file.
-     * @return public keu in PKCS format
+     * @return public key in PKCS format
      * @throws This method may throw an OpenSSLException if OpenSSL indicates an error
      */
     std::string publicKeyToPem() const;

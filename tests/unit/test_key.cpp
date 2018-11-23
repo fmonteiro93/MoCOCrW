@@ -30,8 +30,8 @@ class KeyHandlingTests : public ::testing::Test
 public:
     void SetUp() override;
 protected:
-    mococrw::AsymmetricKeypair _rsaKeyPair = AsymmetricKeypair::generate();
-    mococrw::AsymmetricKeypair _rsaKeyPair2 = AsymmetricKeypair::generate();
+    mococrw::AsymmetricKeypair _rsaKeyPair = AsymmetricKeypair::generateRSA();
+    mococrw::AsymmetricKeypair _rsaKeyPair2 = AsymmetricKeypair::generateRSA();
     mococrw::AsymmetricKeypair _eccKeyPairDefault = AsymmetricKeypair::generateECC();
     mococrw::AsymmetricKeypair _eccKeyPairDefault2 = AsymmetricKeypair::generateECC();
     mococrw::AsymmetricKeypair _eccKeyPairSect571r1 = AsymmetricKeypair::generateECC();
@@ -39,8 +39,8 @@ protected:
 };
 
 void KeyHandlingTests::SetUp() {
-    _rsaKeyPair = AsymmetricKeypair::generate();
-    _rsaKeyPair2 = AsymmetricKeypair::generate();
+    _rsaKeyPair = AsymmetricKeypair::generateRSA();
+    _rsaKeyPair2 = AsymmetricKeypair::generateRSA();
 
     _eccKeyPairDefault = AsymmetricKeypair::generateECC();
     _eccKeyPairDefault2 = AsymmetricKeypair::generateECC();

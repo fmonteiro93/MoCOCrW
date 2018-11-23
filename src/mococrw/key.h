@@ -149,6 +149,7 @@ public:
      * @throws This method may throw an OpenSSLException if OpenSSL
      *      indicates an error
      */
+    [[deprecated("Replaced by generateRSA for improved clarity")]]
     static AsymmetricKeypair generate();
 
     /**
@@ -161,6 +162,17 @@ public:
      *      indicates an error
      */
     static AsymmetricKeypair generate(const AsymmetricKey::Spec&);
+
+    /**
+     * Generate a RSA asymmetric keypair with default Spec.
+     *
+     * Currently, a default-spec is an RSASpec with 2048
+     * bit modulus. (@see RSASpec)
+     *
+     * @throws This method may throw an OpenSSLException if OpenSSL
+     *      indicates an error
+     */
+    static AsymmetricKeypair generateRSA();
 
     /**
      * Generate an ECC asymmetric keypair with default Spec.

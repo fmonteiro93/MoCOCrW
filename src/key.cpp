@@ -35,6 +35,11 @@ AsymmetricKeypair AsymmetricKeypair::generate()
     return generate(defaultSpec);
 }
 
+AsymmetricKeypair AsymmetricKeypair::generateRSA()
+{
+    return generate(RSASpec{});
+}
+
 AsymmetricKeypair AsymmetricKeypair::generateECC()
 {
     ECCSpec defaultSpec{};

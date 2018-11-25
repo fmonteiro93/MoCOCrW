@@ -112,6 +112,7 @@ public:
     virtual const EC_GROUP* SSL_EC_KEY_get0_group(const EC_KEY *key) = 0;
     virtual int SSL_EC_GROUP_get_curve_name(const EC_GROUP *group) = 0;
     virtual int SSL_EVP_PKEY_type(int type) = 0;
+    virtual int SSL_EVP_PKEY_size(EVP_PKEY *pkey) = 0;
 
     /* Reference counting magic */
     virtual int SSL_CRYPTO_add(int *pointer, int amount, int type) = 0;
@@ -355,6 +356,7 @@ public:
     MOCK_METHOD1(SSL_EC_GROUP_get_curve_name, int(const EC_GROUP *group));
 
     MOCK_METHOD1(SSL_EVP_PKEY_type, int(int type));
+    MOCK_METHOD1(SSL_EVP_PKEY_size, int(EVP_PKEY *pkey));
 
     MOCK_METHOD3(SSL_CRYPTO_add, int(int*, int, int));
 
@@ -471,6 +473,7 @@ public:
     MOCK_METHOD2(SSL_EVP_PKEY_CTX_get_rsa_oaep_label, int(EVP_PKEY_CTX *ctx, unsigned char *l));
     MOCK_METHOD1(SSL_RSA_size, int(const RSA *r));
     MOCK_METHOD1(SSL_EVP_MD_size, int(const EVP_MD *md));
+
 };
 
 /**

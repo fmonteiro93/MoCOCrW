@@ -142,6 +142,10 @@ int OpenSSLLib::SSL_EVP_PKEY_type(int type) noexcept
     return EVP_PKEY_type(type);
 }
 
+int OpenSSLLib::SSL_EVP_PKEY_size(EVP_PKEY *pkey) noexcept
+{
+    return EVP_PKEY_size(pkey);
+}
 
 /* Reference counting magic */
 int OpenSSLLib::SSL_CRYPTO_add(int *pointer, int amount, int type) noexcept {

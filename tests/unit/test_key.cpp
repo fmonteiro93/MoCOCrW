@@ -172,6 +172,16 @@ TEST_F(KeyHandlingTests, testGetCurveWithRsaKey)
     ASSERT_THROW(_rsaKeyPair2.getCurve(), mococrw::MoCOCrWException);
 }
 
+TEST_F(KeyHandlingTests, testGetSize)
+{
+    EXPECT_EQ(_rsaKeyPair.getKeySize(), 2048);
+    EXPECT_EQ(_eccKeyPairDefault.getKeySize(), 256);
+    EXPECT_EQ(_eccKeyPairSecp521r1.getKeySize(), 521);
+    EXPECT_EQ(_eccKeyPairSect571r1.getKeySize(), 570);
+    auto rsaKey1024 = AsymmetricKeypair::generate(mococrw::RSASpec{1024});
+    EXPECT_EQ(rsaKey1024.getKeySize(), 1024);
+}
+
 /* Test the KeySpec and the generation of keys that way */
 TEST(KeySpecTest, testGeneratingRSAKeyWithDefaultParameters)
 {

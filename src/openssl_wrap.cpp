@@ -248,6 +248,11 @@ int _EVP_PKEY_type(const EVP_PKEY* key)
     return OpensslCallIsPositive::callChecked(lib::OpenSSLLib::SSL_EVP_PKEY_type, key->type);
 }
 
+int _EVP_PKEY_size(EVP_PKEY *pkey)
+{
+    return OpensslCallIsPositive::callChecked(lib::OpenSSLLib::SSL_EVP_PKEY_size, pkey);
+}
+
 bool _EVP_PKEY_cmp(const EVP_PKEY *a, const EVP_PKEY *b)
 {
     int result = lib::OpenSSLLib::SSL_EVP_PKEY_cmp(a,b);

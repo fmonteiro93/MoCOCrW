@@ -103,6 +103,12 @@ public:
      */
     openssl::ellipticCurveNid getCurve() const  { return _key.getCurve(); }
 
+    /**
+     * Gets the size of the Asymmetric key in bytes
+     * @return the size of the key in bytes
+     */
+    int getKeySize() const { return EVP_PKEY_bits(_key.internal().get());}
+
     inline bool operator==(const AsymmetricPublicKey &rhs) const
     {
         return openssl::_EVP_PKEY_cmp(internal(), rhs.internal());

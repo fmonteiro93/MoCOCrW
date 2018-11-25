@@ -129,6 +129,7 @@ public:
     static const EC_GROUP *SSL_EC_KEY_get0_group(const EC_KEY *key) noexcept;
     static int SSL_EC_GROUP_get_curve_name(const EC_GROUP *group) noexcept;
     static int SSL_EVP_PKEY_type(int type) noexcept;
+    static int SSL_EVP_PKEY_size(EVP_PKEY *pkey) noexcept;
 
     /* Reference counting magic */
     static int SSL_CRYPTO_add(int *pointer, int amount, int type) noexcept;

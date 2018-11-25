@@ -100,6 +100,11 @@ std::vector<uint8_t> AsymmetricEncryption::encrypt(AsymmetricPublicKey key,
         }
 
         int maxSize{pad.getDataMaxSize(key)};
+        /* Validate message size when not using padding*/
+        if (pad.getPadding() == RSAPaddingMode::NONE &&
+            maxSize != static_cast<int>(message.toByteArray().size())){
+            throw MoCOCrWException("Message size is different from the key size");
+        }
         /* Validate message size */
         if (static_cast<int>(message.toByteArray().size()) > maxSize) {
             throw MoCOCrWException("Message too long for RSA key size");

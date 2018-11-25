@@ -307,6 +307,14 @@ int _EC_GROUP_get_curve_name(const EC_GROUP *group);
  */
 int _EVP_PKEY_type(const EVP_PKEY* key);
 
+/**
+ * Gets the size in bytes of a pkey object
+ * @param pkey key to get size from
+ * @return the size of provided key
+ * @throw OpenSSLException if an error occurs in the underlying OpenSSL function.
+ */
+int _EVP_PKEY_size(EVP_PKEY *pkey);
+
 /*
  * Thread safe modification of OpenSSL object reference counters.
  *

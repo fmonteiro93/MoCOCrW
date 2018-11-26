@@ -37,7 +37,8 @@ AsymmetricKeypair AsymmetricKeypair::generate()
 
 AsymmetricKeypair AsymmetricKeypair::generateRSA()
 {
-    return generate(RSASpec{});
+    RSASpec defaultSpec{};
+    return generate(defaultSpec);
 }
 
 AsymmetricKeypair AsymmetricKeypair::generateECC()
@@ -109,7 +110,7 @@ AsymmetricKey ECCSpec::generate() const {
         auto paramCtx = _EVP_PKEY_CTX_new_id(EVP_PKEY_EC);
         _EVP_PKEY_paramgen_init(paramCtx.get());
         _EVP_PKEY_CTX_set_ec_paramgen_curve_nid(paramCtx.get(),
-               static_cast<typename std::underlying_type<openssl::ellipticCurveNid>::type>(_curveNid));
+               static_cast<int>(_curveNid));
         /*Set the curve ans1 flag so that we can save the key to a PEM format and reuse it later*/
         _EVP_PKEY_CTX_set_ec_param_enc(paramCtx.get(), OPENSSL_EC_NAMED_CURVE);
         auto params = _EVP_PKEY_paramgen(paramCtx.get());

@@ -51,9 +51,25 @@ std::vector<uint8_t> sha512(const std::vector<uint8_t> &message) {
     return Hash::sha512().update(message).digest();
 }
 
+std::vector<uint8_t> sha1(const uint8_t *message, size_t length)
+{
+    return Hash::sha1().update(message, length).digest();
+}
+
+std::vector<uint8_t> sha1(const std::string &message)
+{
+    return Hash::sha1().update(message).digest();
+}
+
+std::vector<uint8_t> sha1(const std::vector<uint8_t> &message)
+{
+    return Hash::sha1().update(message).digest();
+}
+
 const std::map<DigestTypes, size_t> Hash::lengthInBytes = {
     { DigestTypes::SHA256, 256 / 8 },
-    { DigestTypes::SHA512, 512 / 8 }
+    { DigestTypes::SHA512, 512 / 8 },
+    { DigestTypes::SHA1, 160 / 8 }
 };
 
 Hash::Hash(const DigestTypes digestType) : _digestType(digestType) {
@@ -69,6 +85,11 @@ Hash Hash::sha256() {
 
 Hash Hash::sha512() {
     return Hash{DigestTypes::SHA512};
+}
+
+Hash Hash::sha1()
+{
+    return Hash{DigestTypes::SHA1};
 }
 
 std::vector<uint8_t> Hash::digest() {

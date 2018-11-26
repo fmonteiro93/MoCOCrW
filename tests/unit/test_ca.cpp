@@ -36,7 +36,9 @@ class CATest : public ::testing::Test
 public:
     void SetUp() override;
 protected:
-    std::unique_ptr<AsymmetricKeypair> _rootKey;
+    std::unique_ptr<AsymmetricKeypair> _rootRSAKey;
+
+    std::unique_ptr<AsymmetricKeypair> _rootEccKey;
 
     std::unique_ptr<DistinguishedName> _certDetails;
 
@@ -45,6 +47,8 @@ protected:
     std::unique_ptr<DistinguishedName> _rootCertDetails;
 
     std::unique_ptr<X509Certificate> _rootCert;
+
+    std::unique_ptr<X509Certificate> _rootEccCert;
 
     std::unique_ptr<KeyUsageExtension> _exampleUsage;
 
@@ -56,13 +60,17 @@ protected:
 
     std::unique_ptr<CertificateAuthority> _ca;
 
+    std::unique_ptr<CertificateAuthority> _eccCa;
+
     Asn1Time _rootCertSignPoint = Asn1Time::fromTimeT(0);
 
 };
 
 void CATest::SetUp()
 {
-    _rootKey = std::make_unique<AsymmetricKeypair>(AsymmetricKeypair::generateRSA());
+    _rootRSAKey = std::make_unique<AsymmetricKeypair>(AsymmetricKeypair::generateRSA());
+
+    _rootEccKey = std::make_unique<AsymmetricKeypair>(AsymmetricKeypair::generateECC());
 
     _certDetails = std::make_unique<DistinguishedName>(DistinguishedName::Builder{}
                  .organizationalUnitName("Car IT")
@@ -109,13 +117,22 @@ void CATest::SetUp()
             .build();
 
     _rootCert = std::make_unique<X509Certificate>(CertificateAuthority::createRootCertificate(
-                                                      *_rootKey,
+                                                      *_rootRSAKey,
                                                       *_rootCertDetails,
                                                       0,
                                                       _caSignParams));
+
+    _rootEccCert = std::make_unique<X509Certificate>(CertificateAuthority::createRootCertificate(
+            *_rootEccKey,
+            *_rootCertDetails,
+            0,
+            _caSignParams));
+
     _rootCertSignPoint = Asn1Time::now();
 
-    _ca = std::make_unique<CertificateAuthority>(_signParams, 1, *_rootCert, *_rootKey);
+    _ca = std::make_unique<CertificateAuthority>(_signParams, 1, *_rootCert, *_rootRSAKey);
+    _eccCa = std::make_unique<CertificateAuthority>(_signParams, 1, *_rootEccCert, *_rootEccKey);
+
 }
 
 
@@ -222,23 +239,39 @@ TEST_F(CATest, testIterateOnExtensionMap)
     EXPECT_EQ(2, _signParams.extensionMap().size());
 }
 
-TEST_F(CATest, testCreateRootCertificate)
+TEST_F(CATest, testCreateRootRSACertificate)
 {
     testValiditySpan(*_rootCert, _signParams.certificateValidity(),
                      _rootCertSignPoint);
     EXPECT_EQ(*_rootCertDetails, _rootCert->getIssuerDistinguishedName());
     EXPECT_EQ(*_rootCertDetails, _rootCert->getSubjectDistinguishedName());
-    EXPECT_EQ(*_rootKey, _rootCert->getPublicKey());
+    EXPECT_EQ(*_rootRSAKey, _rootCert->getPublicKey());
     EXPECT_NO_THROW(_rootCert->verify({*_rootCert}, {}));
 }
 
-TEST_F(CATest, testCAContents)
+TEST_F(CATest, testCreateRootECCCertificate)
+{
+    testValiditySpan(*_rootEccCert, _signParams.certificateValidity(),
+                     _rootCertSignPoint);
+    EXPECT_EQ(*_rootCertDetails, _rootEccCert->getIssuerDistinguishedName());
+    EXPECT_EQ(*_rootCertDetails, _rootEccCert->getSubjectDistinguishedName());
+    EXPECT_EQ(*_rootEccKey, _rootEccCert->getPublicKey());
+    EXPECT_NO_THROW(_rootEccCert->verify({*_rootEccCert}, {}));
+}
+
+TEST_F(CATest, testRSACAContents)
 {
     EXPECT_EQ(_rootCert->toPEM(), _ca->getRootCertificate().toPEM());
     EXPECT_EQ(_signParams, _ca->getSignParams());
 }
 
-TEST_F(CATest, testSignedCSRHasCorrectFields)
+TEST_F(CATest, testECCCAContents)
+{
+    EXPECT_EQ(_rootEccCert->toPEM(), _eccCa->getRootCertificate().toPEM());
+    EXPECT_EQ(_signParams, _eccCa->getSignParams());
+}
+
+TEST_F(CATest, testSignedCSRHasCorrectFieldsRSA)
 {
     CertificateSigningRequest csr{*_certDetails, AsymmetricKeypair::generateRSA()};
     X509Certificate cert = _ca->signCSR(csr);
@@ -247,12 +280,24 @@ TEST_F(CATest, testSignedCSRHasCorrectFields)
     EXPECT_EQ(*_certDetails, cert.getSubjectDistinguishedName());
     EXPECT_EQ(_rootCert->getSubjectDistinguishedName(), cert.getIssuerDistinguishedName());
     EXPECT_NO_THROW(cert.verify({*_rootCert}, {}));
+
 }
 
-TEST_F(CATest, testCanSignCACertificates)
+TEST_F(CATest, testSignedCSRHasCorrectFieldsECC)
+{
+    CertificateSigningRequest csrEcc{*_certDetails, AsymmetricKeypair::generateECC()};
+    X509Certificate certEcc = _ca->signCSR(csrEcc);
+    testValiditySpan(certEcc, _signParams.certificateValidity(), Asn1Time::now());
+    EXPECT_EQ(csrEcc.getPublicKey(), certEcc.getPublicKey());
+    EXPECT_EQ(*_certDetails, certEcc.getSubjectDistinguishedName());
+    EXPECT_EQ(_rootEccCert->getSubjectDistinguishedName(), certEcc.getIssuerDistinguishedName());
+    EXPECT_NO_THROW(certEcc.verify({*_rootEccCert}, {}));
+}
+
+TEST_F(CATest, testCanSignCACertificatesRSA)
 {
     //Adjust CA to generate CA certificates
-    _ca = std::make_unique<CertificateAuthority>(_caSignParams, 0, *_rootCert, *_rootKey);
+    _ca = std::make_unique<CertificateAuthority>(_caSignParams, 0, *_rootCert, *_rootRSAKey);
 
     auto keypair = AsymmetricKeypair::generateRSA();
     CertificateSigningRequest csr{*_certDetails, keypair};
@@ -263,21 +308,54 @@ TEST_F(CATest, testCanSignCACertificates)
     ASSERT_NO_THROW(secondaryCert.verify({*_rootCert}, {cert}));
 }
 
-TEST_F(CATest, testSignedNoCACertificatesCantSignOtherCertificates)
+TEST_F(CATest, testCanSignCACertificatesECC)
+{
+    //Adjust CA to generate CA certificates
+    _eccCa = std::make_unique<CertificateAuthority>(_caSignParams, 0, *_rootCert, *_rootRSAKey);
+
+    auto keypairEcc = AsymmetricKeypair::generateECC();
+    CertificateSigningRequest csrEcc{*_certDetails, keypairEcc};
+    X509Certificate certEcc = _eccCa->signCSR(csrEcc);
+    ASSERT_TRUE(certEcc.isCA());
+    CertificateAuthority newEccCA(_signParams, 0, certEcc, keypairEcc);
+    csrEcc = CertificateSigningRequest{*_secondaryCertDetails, AsymmetricKeypair::generateECC()};
+    X509Certificate secondaryCertEcc = newEccCA.signCSR(csrEcc);
+    ASSERT_NO_THROW(secondaryCertEcc.verify({*_rootEccCert}, {certEcc}));
+}
+
+TEST_F(CATest, testSignedNoCACertificatesCantSignOtherCertificatesRSA)
 {
     auto keypair = AsymmetricKeypair::generateRSA();
     CertificateSigningRequest csr{*_certDetails, keypair};
     X509Certificate cert = _ca->signCSR(csr);
     // The newly created certificate has CA=false
+    ASSERT_FALSE(cert.isCA());
     CertificateAuthority newCA(_signParams, 0, cert, keypair);
     csr = CertificateSigningRequest{*_certDetails, AsymmetricKeypair::generateRSA()};
     // The signing fails because the certificate has CA=false
     ASSERT_THROW(newCA.signCSR(csr), MoCOCrWException);
 }
 
+TEST_F(CATest, testSignedNoCACertificatesCantSignOtherCertificatesECC)
+{
+    auto ecckeypair = AsymmetricKeypair::generateECC();
+    CertificateSigningRequest csrEcc{*_certDetails, ecckeypair};
+    X509Certificate certEcc = _ca->signCSR(csrEcc);
+    // The newly created certificate has CA=false
+    ASSERT_FALSE(certEcc.isCA());
+    CertificateAuthority newCA(_signParams, 0, certEcc, ecckeypair);
+    csrEcc = CertificateSigningRequest{*_certDetails, AsymmetricKeypair::generateRSA()};
+    // The signing fails because the certificate has CA=false
+    ASSERT_THROW(newCA.signCSR(csrEcc), MoCOCrWException);
+}
+
 TEST_F(CATest, testInitializeCAWithNonMatchingKey)
 {
+    /* RSA */
     EXPECT_THROW(CertificateAuthority(_signParams, 0, *_rootCert, AsymmetricKeypair::generateRSA()),
+                 MoCOCrWException);
+    /* ECC */
+    EXPECT_THROW(CertificateAuthority(_signParams, 0, *_rootEccCert, AsymmetricKeypair::generateECC()),
                  MoCOCrWException);
 }
 
@@ -312,6 +390,46 @@ TEST_F(CATest, testVerifyCAAgainstPureOpenSslOutput)
     remove("cert.pem");
 }
 
+TEST_F(CATest, testVerifyCAAgainstPureOpenSslOutputECC)
+{
+    auto keypair = AsymmetricKeypair::generateECC();
+    CertificateSigningRequest csr{*_certDetails, keypair};
+    X509Certificate cert = _eccCa->signCSR(csr);
+
+    std::string tmpfile = std::tmpnam(nullptr);
+    std::ofstream file(tmpfile);
+    ASSERT_TRUE(file.good()) << "Cannot open tmpfile to write certificate for openssl inspection";
+    file << cert.toPEM();
+    ASSERT_TRUE(file.good()) << "Writing of certificate for openssl inspection failed";
+    file.close();
+
+    std::string opensslCommandline = "openssl x509 -in "s + tmpfile + " -noout -text";
+    std::string output = exec(opensslCommandline.c_str());
+    std::remove(tmpfile.c_str());
+
+    EXPECT_NE(output.find("Issuer: CN=ImATeapot, C=DE, L=oben, ST=nebenan, OU=Linux Support"),
+              std::string::npos);
+
+    EXPECT_NE(output.find("Subject: CN=BMW internal CA Certificate, C=DE, OU=Car IT, O=BMW"),
+              std::string::npos);
+
+    EXPECT_NE(output.find("ASN1 OID: prime256v1"),
+              std::string::npos);
+
+    EXPECT_NE(output.find("Public Key Algorithm: id-ecPublicKey"),
+              std::string::npos);
+
+    EXPECT_NE(output.find("NIST CURVE: P-256"),
+              std::string::npos);
+
+    EXPECT_NE(output.find("X509v3 Key Usage: critical"), std::string::npos);
+    EXPECT_NE(output.find("Digital Signature, Certificate Sign, CRL Sign"), std::string::npos);
+    EXPECT_NE(output.find("X509v3 Basic Constraints: critical"), std::string::npos);
+    EXPECT_NE(output.find("CA:FALSE"), std::string::npos);
+
+    remove("cert.pem");
+}
+
 TEST_F(CATest, testIssueLongLivedCertificate)
 {
     // Certificate shall be valid for 1000 years
@@ -324,13 +442,25 @@ TEST_F(CATest, testIssueLongLivedCertificate)
             .addExtension(*_exampleUsage)
             .build();
 
-    _ca = std::make_unique<CertificateAuthority>(_signParams, 0, *_rootCert, *_rootKey);
+    _ca = std::make_unique<CertificateAuthority>(_signParams, 0, *_rootCert, *_rootRSAKey);
 
     X509Certificate cert = _ca->signCSR(CertificateSigningRequest{*_certDetails,
                                                        AsymmetricKeypair::generateRSA()});
 
     testValiditySpan(cert, validityTime, Asn1Time::now());
 
+}
+
+TEST_F(CATest, testGetNextSerialNumber)
+{
+    _eccCa = std::make_unique<CertificateAuthority>(_caSignParams, 0, *_rootCert, *_rootRSAKey);
+    auto keypair = AsymmetricKeypair::generateECC();
+    auto nextSerial = _eccCa->getNextSerialNumber();
+
+    CertificateSigningRequest csr{*_certDetails, keypair};
+    auto newCaCert = _eccCa->signCSR(csr);
+
+    EXPECT_EQ(newCaCert.getSerialNumber(), nextSerial);
 }
 
 // This test requires the ability to set the time for which a certificate is verified.
@@ -347,7 +477,7 @@ TEST_F(CATest, DISABLED_testIssueCertificateInFarFuture)
             .addExtension(*_exampleUsage)
             .build();
 
-    _ca = std::make_unique<CertificateAuthority>(_signParams, 0, *_rootCert, *_rootKey);
+    _ca = std::make_unique<CertificateAuthority>(_signParams, 0, *_rootCert, *_rootRSAKey);
 
     X509Certificate cert = _ca->signCSR(CertificateSigningRequest{*_certDetails,
                                                        AsymmetricKeypair::generateRSA()});

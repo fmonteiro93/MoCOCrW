@@ -29,6 +29,9 @@ class KeyHandlingTests : public ::testing::Test
 {
 public:
     void SetUp() override;
+
+    static std::string _pemEccPrivKeySect409k1;
+    static std::string _pemEccPubKeySect409k1;
 protected:
     mococrw::AsymmetricKeypair _rsaKeyPair = AsymmetricKeypair::generateRSA();
     mococrw::AsymmetricKeypair _rsaKeyPair2 = AsymmetricKeypair::generateRSA();
@@ -48,6 +51,20 @@ void KeyHandlingTests::SetUp() {
     _eccKeyPairSect571r1 = AsymmetricKeypair::generate(mococrw::ECCSpec{openssl::ellipticCurveNid::SECT_571r1});
     _eccKeyPairSecp521r1 = AsymmetricKeypair::generate(mococrw::ECCSpec{openssl::ellipticCurveNid::SECP_521r1});
 }
+
+std::string KeyHandlingTests::_pemEccPrivKeySect409k1{R"(-----BEGIN PRIVATE KEY-----
+MIHCAgEAMBAGByqGSM49AgEGBSuBBAAkBIGqMIGnAgEBBDQAF2zFhKyxJiI7bGvG
+Mw9rq7DUvrqTDJMHeRttpsZc0i9tFbvmaT2J5U39/RkseDha2b87oWwDagAEAAdj
+oVwkpy9CPA8RU3sd0aXV/XnHw5nE7HgINd6ApxCaknRebk4Vgbgz04588YqjqQpQ
+TAA+hxkUt1ZInurAHTt/ECQpvt1YOTBgNigakbLzq1LsbbyLWJsH5diall6Is+lg
+y2Mu1EA=
+-----END PRIVATE KEY-----)"};
+
+std::string KeyHandlingTests::_pemEccPubKeySect409k1{R"(-----BEGIN PUBLIC KEY-----
+MH4wEAYHKoZIzj0CAQYFK4EEACQDagAEAAdjoVwkpy9CPA8RU3sd0aXV/XnHw5nE
+7HgINd6ApxCaknRebk4Vgbgz04588YqjqQpQTAA+hxkUt1ZInurAHTt/ECQpvt1Y
+OTBgNigakbLzq1LsbbyLWJsH5diall6Is+lgy2Mu1EA=
+-----END PUBLIC KEY-----)"};
 
 TEST_F(KeyHandlingTests, testGeneratedKeyIsNotNull)
 {
@@ -93,6 +110,34 @@ TEST_F(KeyHandlingTests, testPubKeyFromSavedPemIsSameAsOriginalInOpenSSLObject)
     ASSERT_EQ(_eccKeyPairSecp521r1, eccSecpParsedKey);
     ASSERT_NE(_eccKeyPairSecp521r1, _rsaKeyPair);
 
+}
+
+TEST_F(KeyHandlingTests, testReadExternalEccPEMKey)
+{
+    /*Read private and public key from pem string*/
+    auto eccPrivKey = mococrw::AsymmetricKeypair::readPrivateKeyFromPEM(
+                                                  KeyHandlingTests::_pemEccPrivKeySect409k1, "");
+    auto eccPubKey = mococrw::AsymmetricPublicKey::readPublicKeyFromPEM(
+                                                   KeyHandlingTests::_pemEccPubKeySect409k1);
+
+    /*Check key type and curve*/
+    EXPECT_EQ(eccPrivKey.getType(), AsymmetricKey::KeyTypes::ECC);
+    EXPECT_EQ(eccPubKey.getType(), AsymmetricKey::KeyTypes::ECC);
+
+    auto privSpec = eccPrivKey.getKeySpec();
+    auto pubSpec = eccPubKey.getKeySpec();
+    EXPECT_EQ(dynamic_cast<ECCSpec*>(privSpec.get())->curve(), openssl::ellipticCurveNid::SECT_409k1);
+    EXPECT_EQ(dynamic_cast<ECCSpec*>(pubSpec.get())->curve(), openssl::ellipticCurveNid::SECT_409k1);
+
+    /*Write key to a new pem file and read back to compare with original*/
+    /*Public key*/
+    const auto pemOfPubkey = eccPubKey.publicKeyToPem();
+    auto parsedKey = mococrw::AsymmetricPublicKey::readPublicKeyFromPEM(pemOfPubkey);
+    ASSERT_EQ(eccPubKey, parsedKey);
+    /*Private key*/
+    const auto pemOfPrivateKey = eccPrivKey.privateKeyToPem("secret");
+    auto retrievedKeyPair = AsymmetricKeypair::readPrivateKeyFromPEM(pemOfPrivateKey, "secret");
+    ASSERT_EQ(eccPrivKey, retrievedKeyPair);
 }
 
 TEST_F(KeyHandlingTests, testPubkeyFromSavedPemIsSameAsOriginalInPEM)

@@ -30,11 +30,8 @@ using namespace openssl;
 void SignatureUtils::setUpContext(EVP_PKEY_CTX *ctx,
                                   const OperationType &operation)
 {
-    if (operation == OperationType::Sign) {
-        _EVP_PKEY_sign_init(ctx);
-    } else {
-        EVP_PKEY_verify_init(ctx);
-    }
+    (operation == OperationType::Sign) ? _EVP_PKEY_sign_init(ctx) : _EVP_PKEY_verify_init(ctx);
+
     _EVP_PKEY_CTX_set_signature_md(ctx, _getMDPtrFromDigestType(openssl::DigestTypes::SHA1));
 }
 
@@ -43,11 +40,8 @@ void SignatureUtils::setUpContext(EVP_PKEY_CTX *ctx,
                                   const RSAPadding &padding,
                                   const OperationType &operation)
 {
-    if (operation == OperationType::Sign) {
-        _EVP_PKEY_sign_init(ctx);
-    } else {
-        EVP_PKEY_verify_init(ctx);
-    }
+    (operation == OperationType::Sign) ? _EVP_PKEY_sign_init(ctx) : _EVP_PKEY_verify_init(ctx);
+
     _EVP_PKEY_CTX_set_rsa_padding(ctx, static_cast<int>(padding.getPadding()));
     _EVP_PKEY_CTX_set_signature_md(ctx, _getMDPtrFromDigestType(getHashing(padding)));
 
@@ -96,12 +90,13 @@ void SignatureUtils::verify(EVP_PKEY_CTX *ctx,
 
 /*********************************** ECC specialization  ***********************************/
 std::vector<uint8_t> SignatureUtils::ECC::create(AsymmetricPrivateKey &privateKey,
+                                                 const openssl::DigestTypes &digestType,
                                                  const std::string &message)
 {
     std::vector<uint8_t> messageDigest;
 
     try {
-        messageDigest = digestMessage(message,  DigestTypes::SHA1);
+        messageDigest = digestMessage(message, digestType);
     }
     catch (const OpenSSLException &e) {
         throw MoCOCrWException(e.what());
@@ -133,14 +128,14 @@ std::vector<uint8_t> SignatureUtils::ECC::create(AsymmetricPrivateKey &privateKe
 }
 
 void SignatureUtils::ECC::verify(AsymmetricPublicKey &publicKey,
+                                 const openssl::DigestTypes &digestType,
                                  const std::vector<uint8_t> &signature,
                                  const std::string &message)
 {
     std::vector<uint8_t> messageDigest;
 
     try {
-        messageDigest = digestMessage(message,  DigestTypes::SHA1);
-
+        messageDigest = digestMessage(message, digestType);
     }
     catch (const OpenSSLException &e) {
         throw MoCOCrWException(e.what());
@@ -169,11 +164,12 @@ void SignatureUtils::ECC::verify(AsymmetricPublicKey &publicKey,
 }
 
 void SignatureUtils::ECC::verify(const X509Certificate &certificate,
+                                 const openssl::DigestTypes &digestType,
                                  const std::vector<uint8_t> &signature,
                                  const std::string &message)
 {
     auto key = certificate.getPublicKey();
-    verify(key, signature, message);
+    verify(key, digestType, signature, message);
 }
 
 void SignatureUtils::ECC::verify(const X509Certificate &certificate,

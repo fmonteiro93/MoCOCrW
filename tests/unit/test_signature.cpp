@@ -494,9 +494,17 @@ TEST_F(SignatureTest, testSuccessfulEccSignatureAndVerification)
 {
     std::vector<uint8_t> signature;
 
+    /* Sign and verify with SHA256 hashing */
+    EXPECT_NO_THROW(signature = SignatureUtils::ECC::create(*_keyPairEcc, openssl::DigestTypes::SHA256, _testMessage));
+    EXPECT_NO_THROW(SignatureUtils::ECC::verify(*_keyPairEcc, openssl::DigestTypes::SHA256, signature, _testMessage));
+
+    /* Sign and verify with SHA512 hashing */
+    EXPECT_NO_THROW(signature = SignatureUtils::ECC::create(*_keyPairEcc, openssl::DigestTypes::SHA512, _testMessage));
+    EXPECT_NO_THROW(SignatureUtils::ECC::verify(*_keyPairEcc, openssl::DigestTypes::SHA512, signature, _testMessage));
+    
     /* Sign and verify with SHA1 hashing */
-    EXPECT_NO_THROW(signature = SignatureUtils::ECC::create(*_keyPairEcc, _testMessage));
-    EXPECT_NO_THROW(SignatureUtils::ECC::verify(*_keyPairEcc, signature, _testMessage));
+    EXPECT_NO_THROW(signature = SignatureUtils::ECC::create(*_keyPairEcc, openssl::DigestTypes::SHA1, _testMessage));
+    EXPECT_NO_THROW(SignatureUtils::ECC::verify(*_keyPairEcc, openssl::DigestTypes::SHA1, signature, _testMessage));
 }
 
 /**
@@ -508,7 +516,7 @@ TEST_F(SignatureTest, testSuccessfulEccVerificationWithValidEccPublicKey)
     auto publicKey = mococrw::AsymmetricKeypair::readPublicKeyFromPEM(_validEccPublicKey);
 
     ASSERT_EQ(publicKey.getType(), AsymmetricKey::KeyTypes::ECC);
-    EXPECT_NO_THROW(SignatureUtils::ECC::verify(publicKey, _validEccSignatureSHA1, _testMessage));
+    EXPECT_NO_THROW(SignatureUtils::ECC::verify(publicKey, openssl::DigestTypes::SHA1, _validEccSignatureSHA1, _testMessage));
     EXPECT_NO_THROW(SignatureUtils::ECC::verify(publicKey, _validEccSignatureSHA1, _testMessageDigestSHA1));
 }
 
@@ -518,11 +526,11 @@ TEST_F(SignatureTest, testSuccessfulEccVerificationWithValidEccPublicKey)
 TEST_F(SignatureTest, testUnsuccessfulEccVerificationWithInvalidSignature)
 {
     std::vector<uint8_t> signature;
-    EXPECT_NO_THROW(signature = SignatureUtils::ECC::create(*_keyPairEcc, _testMessage));
+    EXPECT_NO_THROW(signature = SignatureUtils::ECC::create(*_keyPairEcc, openssl::DigestTypes::SHA1, _testMessage));
 
     /* The signature is modified and should now be invalid. */
     std::random_shuffle(signature.begin(), signature.end());
-    ASSERT_THROW(SignatureUtils::ECC::verify(*_keyPairEcc, signature, _testMessage),
+    ASSERT_THROW(SignatureUtils::ECC::verify(*_keyPairEcc, openssl::DigestTypes::SHA1, signature, _testMessage),
                  MoCOCrWException);
 }
 
@@ -538,7 +546,7 @@ TEST_F(SignatureTest, testSuccessfulEccVerificationWithCertificate)
     _root1_RsaCert = std::make_unique<X509Certificate>(X509Certificate::fromPEM(_validEccCertificate));
 
     /* Verify with plain text message */
-    EXPECT_NO_THROW(SignatureUtils::ECC::verify(*_root1_RsaCert, _validEccSignatureSHA1, _testMessage));
+    EXPECT_NO_THROW(SignatureUtils::ECC::verify(*_root1_RsaCert, openssl::DigestTypes::SHA1, _validEccSignatureSHA1, _testMessage));
 
     /* Verify with message digest */
     EXPECT_NO_THROW(SignatureUtils::ECC::verify(
@@ -553,6 +561,6 @@ TEST_F(SignatureTest, testUnsuccessfulEccVerificationWithWrongPublicKey)
     auto publicKey = mococrw::AsymmetricKeypair::readPublicKeyFromPEM(_invalidEccPublicKey);
 
     ASSERT_EQ(publicKey.getType(), AsymmetricKey::KeyTypes::ECC);
-    ASSERT_THROW(SignatureUtils::ECC::verify(publicKey, _validEccSignatureSHA1, _testMessage),
+    ASSERT_THROW(SignatureUtils::ECC::verify(publicKey, openssl::DigestTypes::SHA1, _validEccSignatureSHA1, _testMessage),
                  MoCOCrWException);
 }

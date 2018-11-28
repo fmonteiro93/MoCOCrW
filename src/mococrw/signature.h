@@ -33,65 +33,6 @@ class SignatureUtils
 public:
     SignatureUtils() = delete;
 
-private:
-
-    enum class OperationType{ Sign, Verify};
-
-    static const int c_defaultSaltLength = 20;
-
-    /**
-     * @brief Returns the hashing function for a given padding configuration
-     *
-     * Helper function.
-     *
-     * @param padding The padding mode
-     * @throw MoCOCrWException if the padding mode isn't supported
-     */
-    static openssl::DigestTypes getHashing(const RSAPadding &padding);
-
-    /**
-     * @brief Digests a message
-     *
-     * Digests a message using a given algorithm.
-     *
-     * @param msg The message to be digested
-     * @param algorithm The algorithm to be used in the digest operation
-     * @throw MoCOCrWException if the algorithm isn't supported or the digest fails
-     */
-    static std::vector<uint8_t> digestMessage(const std::string &message,
-                                              const openssl::DigestTypes &algorithm);
-
-    /*
-     * Set up an EVP_PKEY_CTX for ECC-based signature and verification operations
-     */
-    static void setUpContext(EVP_PKEY_CTX *ctx,
-                             const OperationType &operation);
-
-    /*
-     * Set up an EVP_PKEY_CTX for RSA-based signature and verification operations
-     */
-    static void setUpContext(EVP_PKEY_CTX *ctx,
-                             const RSAPadding &padding,
-                             const OperationType &operation);
-
-    /*
-     * Performs the actual OpenSSL sign operation based on a context and a message digest.
-     * Returns the signed message in @signedMessage
-     */
-    static void create(EVP_PKEY_CTX *ctx,
-                       const std::vector<uint8_t> &messageDigest,
-                       std::vector<uint8_t> &signedMessage);
-
-    /*
-     * Performs the actual OpenSSL verification operation based on a signature and a message digest.
-     * Propagates the OpenSSLException in case of failure.
-     */
-    static void verify(EVP_PKEY_CTX *ctx,
-                       const std::vector<uint8_t> &signature,
-                       const std::vector<uint8_t> &messageDigest);
-
-
-public:
     /**
      * This class defines an interface to sign and verify messages using ECC keys and certificates.
      */
@@ -106,11 +47,13 @@ public:
          * Creates an ECC signature for a plain text message based on a given private key.
          *
          * @param privateKey The private key to be used in the signature
+         * @param digestType The hash function to digest the message
          * @param message The message to be hashed and signed
          * @return The created signature of the message
          * @throw MoCOCrWException if the sign operation fails.
          */
         static std::vector<uint8_t> create(AsymmetricPrivateKey &privateKey,
+                                           const openssl::DigestTypes &digestType,
                                            const std::string &message);
         /**
          * @brief Create an ECC signature
@@ -128,21 +71,23 @@ public:
         /**
          * @brief Verify a signature (ECC)
          *
-         * Verifies a signature based on the signed message and a given public key and padding mode.
+         * Verifies a signature based on the signed message and a given public key.
          *
          * @param publicKey The public key to be used in the verification
+         * @param digestType The hash function to digest the message
          * @param signature The signature to be verified
          * @param message The plain text message the signature is verified with
          * @throw MoCOCrWException if the verification fails.
          */
         static void verify(AsymmetricPublicKey &publicKey,
+                           const openssl::DigestTypes &digestType,
                            const std::vector<uint8_t> &signature,
                            const std::string &message);
 
         /**
          * @brief Verify a signature (ECC)
          *
-         * Verifies a signature based on the message digest and a given public key and padding mode.
+         * Verifies a signature based on the message digest and a given public key.
          *
          * @param publicKey The public key to be used in the verification
          * @param signature The signature to be verified
@@ -159,11 +104,13 @@ public:
          * Verifies a signature based on the signed message and a given X509 certificate.
          *
          * @param certificate A x509 certificate from which the public key will be extracted
+         * @param digestType The hash function to digest the message
          * @param signature The signature to be verified
          * @param message The plain text message the signature is verified with
          * @throw MoCOCrWException if the verification fails.
          */
         static void verify(const X509Certificate &certificate,
+                           const openssl::DigestTypes &digestType,
                            const std::vector<uint8_t> &signature,
                            const std::string &message);
 
@@ -289,6 +236,63 @@ public:
 
     friend class ECC;
     friend class RSA;
+
+private:
+    enum class OperationType{ Sign, Verify};
+
+    static const int c_defaultSaltLength = 20;
+
+    /**
+     * @brief Returns the hashing function for a given padding configuration
+     *
+     * Helper function.
+     *
+     * @param padding The padding mode
+     * @throw MoCOCrWException if the padding mode isn't supported
+     */
+    static openssl::DigestTypes getHashing(const RSAPadding &padding);
+
+    /**
+     * @brief Digests a message
+     *
+     * Digests a message using a given algorithm.
+     *
+     * @param msg The message to be digested
+     * @param algorithm The algorithm to be used in the digest operation
+     * @throw MoCOCrWException if the algorithm isn't supported or the digest fails
+     */
+    static std::vector<uint8_t> digestMessage(const std::string &message,
+                                              const openssl::DigestTypes &algorithm);
+
+    /*
+     * Set up an EVP_PKEY_CTX for ECC-based signature and verification operations
+     */
+    static void setUpContext(EVP_PKEY_CTX *ctx,
+                             const OperationType &operation);
+
+    /*
+     * Set up an EVP_PKEY_CTX for RSA-based signature and verification operations
+     */
+    static void setUpContext(EVP_PKEY_CTX *ctx,
+                             const RSAPadding &padding,
+                             const OperationType &operation);
+
+    /*
+     * Performs the actual OpenSSL sign operation based on a context and a message digest.
+     * Returns the message signature in @signedMessage.
+     * Propagates the OpenSSLException in case of failure.
+     */
+    static void create(EVP_PKEY_CTX *ctx,
+                       const std::vector<uint8_t> &messageDigest,
+                       std::vector<uint8_t> &signedMessage);
+
+    /*
+     * Performs the actual OpenSSL verification operation based on a signature and a message digest.
+     * Propagates the OpenSSLException in case of failure.
+     */
+    static void verify(EVP_PKEY_CTX *ctx,
+                       const std::vector<uint8_t> &signature,
+                       const std::vector<uint8_t> &messageDigest);
 };
 
 } // namespace mococrw

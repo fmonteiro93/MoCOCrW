@@ -51,11 +51,14 @@ protected:
     /* The SHA1 digest of the test message. */
     static const std::vector<uint8_t> _testMessageDigestSHA1;
 
-    /* Valid keys belonging to the same key pair. */
+    /* Valid RSA keys belonging to the same key pair. */
     static const std::string _validRsaPublicKey;
+    static const std::string _validRsaPrivateKey;
+
+    /* Valid ECC PRIME_256v1 keys belonging to the same key pair. */
     static const std::string _validEccPublicKey;
     static const std::string _invalidEccPublicKey;
-    static const std::string _validRsaPrivateKey;
+
     /*
      * Unused for the time being. To be kept for future reference (matches _validEccPublicKey and
      * _validEccCertificate
@@ -501,7 +504,7 @@ TEST_F(SignatureTest, testSuccessfulEccSignatureAndVerification)
     /* Sign and verify with SHA512 hashing */
     EXPECT_NO_THROW(signature = SignatureUtils::ECC::create(*_keyPairEcc, openssl::DigestTypes::SHA512, _testMessage));
     EXPECT_NO_THROW(SignatureUtils::ECC::verify(*_keyPairEcc, openssl::DigestTypes::SHA512, signature, _testMessage));
-    
+
     /* Sign and verify with SHA1 hashing */
     EXPECT_NO_THROW(signature = SignatureUtils::ECC::create(*_keyPairEcc, openssl::DigestTypes::SHA1, _testMessage));
     EXPECT_NO_THROW(SignatureUtils::ECC::verify(*_keyPairEcc, openssl::DigestTypes::SHA1, signature, _testMessage));
